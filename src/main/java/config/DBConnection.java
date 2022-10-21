@@ -5,8 +5,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DBConnection {
-    private static Connection con;
-
     private DBConnection() {
 
     }
@@ -18,10 +16,10 @@ public class DBConnection {
             e.printStackTrace();
         }
         try {
-            con = DriverManager.getConnection(DatabaseConfig.CONNECTION_STRING, DatabaseConfig.DB_USER_NAME, DatabaseConfig.DB_PASSWORD);
+            return DriverManager.getConnection(DatabaseConfig.CONNECTION_STRING, DatabaseConfig.DB_USER_NAME, DatabaseConfig.DB_PASSWORD);
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
-        return con;
+        return null;
     }
 }
