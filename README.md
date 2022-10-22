@@ -9,7 +9,7 @@
 步骤一：docker 中下载 mysql 镜像，版本号`5.7.40`  
 步骤二：在命名行中进入当前项目并创建 `octopus-news` 容器，绑定 `3306` 端口，数据存储在本地  
 ``` shell script
-docker run --name octopus-news -p 3306:3306 -v `pwd`/mysql:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=qwerdfgh -d mysql:5.7.40`
+docker run --name octopus-news -p 3306:3306 -v `pwd`/mysql:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=qwerdfgh -d mysql:5.7.40 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
 ```
 步骤三：初始化数据库  
 查看项目中`src/main/resources/db/Database_Initialization.sql`语句并连接上数据库执行  
