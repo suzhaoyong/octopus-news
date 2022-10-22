@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 public class Crawler {
     static final String INDEX_PAGE_URL = "https://sina.cn";
-    private CrawlerDao dao = new JdbcCrawlerDao();
+    private CrawlerDao dao = new MybatisCrawlerDao();
 
     public static void main(String[] args) throws SQLException {
         new Crawler().run();
@@ -102,7 +102,6 @@ public class Crawler {
             }
         }
     }
-
 
 
 }
