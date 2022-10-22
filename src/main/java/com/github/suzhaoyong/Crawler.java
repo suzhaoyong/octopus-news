@@ -12,6 +12,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
@@ -19,13 +20,13 @@ public class Crawler {
     static final String INDEX_PAGE_URL = "https://sina.cn";
     private CrawlerDao dao = new JdbcCrawlerDao();
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
         new Crawler().run();
     }
 
-    public void run() {
+    public void run() throws SQLException {
         String link;
-        while ((link = getNextLinkThenRemove()) != null) {
+        while ((link = dao.getNextLinkThenRemove()) != null) {
             if (dao.isAlreadyProcessedLink(link)) {
                 continue;
             }
@@ -39,16 +40,8 @@ public class Crawler {
         }
     }
 
-    private String getNextLinkThenRemove() {
-        String link = dao.getNextLink();
-        if (link != null) {
-            dao.removeToBeProcessedDataBaseEndLink(link);
-            return link;
-        }
-        return null;
-    }
 
-    private void parseHtmlThenStoreLinkIntoToBeProcessedDataBase(Document doc) {
+    private void parseHtmlThenStoreLinkIntoToBeProcessedDataBase(Document doc) throws SQLException {
         for (Element aTag : doc.select("a")) {
             String href = aTag.attr("href");
             if (isTerribleLink(href)) {
@@ -98,7 +91,7 @@ public class Crawler {
         return null;
     }
 
-    private void storeIntoDataBaseIfItIsNewsPage(Document doc, String link) {
+    private void storeIntoDataBaseIfItIsNewsPage(Document doc, String link) throws SQLException {
         ArrayList<Element> articleTags = doc.select("article");
         if (!articleTags.isEmpty()) {
             for (Element articleTag : articleTags) {

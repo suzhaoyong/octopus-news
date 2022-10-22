@@ -11,7 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class JdbcCrawlerDao implements CrawlerDao {
-    public String getNextLink() {
+     private String getNextLink() throws SQLException {
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try (Connection con = DBConnection.getCon()) {
@@ -20,39 +20,41 @@ public class JdbcCrawlerDao implements CrawlerDao {
             while (resultSet.next()) {
                 return resultSet.getString(1);
             }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
         } finally {
             closePreparedStatement(statement);
             closeResultSet(resultSet);
         }
         return null;
     }
-    public void storeLinkIntoToBeProcessedDataBase(String href) {
+    public String getNextLinkThenRemove() throws SQLException {
+        String link = getNextLink();
+        if (link != null) {
+            removeToBeProcessedDataBaseEndLink(link);
+            return link;
+        }
+        return null;
+    }
+    public void storeLinkIntoToBeProcessedDataBase(String href) throws SQLException {
         PreparedStatement statement = null;
         try (Connection con = DBConnection.getCon();) {
             statement = con.prepareStatement("insert into " + LinksToBeProcessedDBConstants.TABLE_LINKS_TO_BE_PROCESSED + " (link) values (?)");
             statement.setString(1, href);
             statement.executeUpdate();
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
         } finally {
             closePreparedStatement(statement);
         }
     }
-    public void storeLinkIntoAlreadyProcessedDataBase(String link) {
+    public void storeLinkIntoAlreadyProcessedDataBase(String link) throws SQLException {
         PreparedStatement statement = null;
         try (Connection con = DBConnection.getCon();) {
             statement = con.prepareStatement("insert into " + LinksAlreadyProcessedDBConstants.TABLE_LINKS_ALREADY_PROCESSED + " (link) values (?)");
             statement.setString(1, link);
             statement.executeUpdate();
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
         } finally {
             closePreparedStatement(statement);
         }
     }
-    public boolean isAlreadyProcessedLink(String link) {
+    public boolean isAlreadyProcessedLink(String link) throws SQLException {
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try (Connection con = DBConnection.getCon();) {
@@ -62,27 +64,23 @@ public class JdbcCrawlerDao implements CrawlerDao {
             while (resultSet.next()) {
                 return true;
             }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
         } finally {
             closePreparedStatement(statement);
             closeResultSet(resultSet);
         }
         return false;
     }
-    public void removeToBeProcessedDataBaseEndLink(String link) {
+    private void removeToBeProcessedDataBaseEndLink(String link) throws SQLException {
         PreparedStatement statement = null;
         try (Connection con = DBConnection.getCon();) {
             statement = con.prepareStatement("delete from " + LinksToBeProcessedDBConstants.TABLE_LINKS_TO_BE_PROCESSED + " where link = ?");
             statement.setString(1, link);
             statement.executeUpdate();
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
         } finally {
             closePreparedStatement(statement);
         }
     }
-    public void storeNewsIntoDataBase(String link, String title, String content) {
+    public void storeNewsIntoDataBase(String link, String title, String content) throws SQLException {
         PreparedStatement statement = null;
         try (Connection con = DBConnection.getCon();) {
             statement = con.prepareStatement("insert into " + NewsDBConstants.TABLE_NEWS + " (title, content, url) values (?, ?, ?)");
@@ -90,13 +88,11 @@ public class JdbcCrawlerDao implements CrawlerDao {
             statement.setString(2, content);
             statement.setString(3, link);
             statement.executeUpdate();
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
         } finally {
             closePreparedStatement(statement);
         }
     }
-    private static void closeResultSet(ResultSet resultSet) {
+    private static void closeResultSet(ResultSet resultSet){
         if (resultSet != null) {
             try {
                 resultSet.close();
