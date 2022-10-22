@@ -87,7 +87,7 @@ public class Main {
     }
 
     private static boolean isTerribleLink(String href) {
-        return href.toLowerCase().startsWith("javascript") || href.trim() == "" || href.startsWith("#");
+        return href.toLowerCase().startsWith("javascript") || "".equals(href.trim()) || href.startsWith("#");
     }
 
     private static boolean isAlreadyProcessedLink(String link) {
