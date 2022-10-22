@@ -21,6 +21,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class Main {
     static final String INDEX_PAGE_URL = "https://sina.cn";
@@ -32,9 +33,6 @@ public class Main {
                 continue;
             }
             if (isInterestLink(link)) {
-                if (link.startsWith("//")) {
-                    link = "https:" + link;
-                }
                 System.out.println(link);
                 Document doc = httpGetAndParseHtml(link);
                 parseHtmlThenStoreLinkIntoToBeProcessedDataBase(doc);
@@ -70,6 +68,12 @@ public class Main {
         PreparedStatement statement = null;
         for (Element aTag : doc.select("a")) {
             String href = aTag.attr("href");
+            if (isTerribleLink(href)) {
+                continue;
+            }
+            if (href.startsWith("//")) {
+                href = "https:" + href;
+            }
             try (Connection con = DBConnection.getCon();) {
                 statement = con.prepareStatement("insert into " + LinksToBeProcessedDBConstants.TABLE_LINKS_TO_BE_PROCESSED + " (link) values (?)");
                 statement.setString(1, href);
@@ -80,6 +84,10 @@ public class Main {
                 closePreparedStatement(statement);
             }
         }
+    }
+
+    private static boolean isTerribleLink(String href) {
+        return href.toLowerCase().startsWith("javascript") || href.trim() == "" || href.startsWith("#");
     }
 
     private static boolean isAlreadyProcessedLink(String link) {
@@ -190,20 +198,22 @@ public class Main {
     private static void storeIntoDataBaseIfItIsNewsPage(Document doc, String link) {
         ArrayList<Element> articleTags = doc.select("article");
         if (!articleTags.isEmpty()) {
-            String title = articleTags.get(0).child(0).text();
-            String content = articleTags.get(0).child(3).text();
-            System.out.println(title);
-            PreparedStatement statement = null;
-            try (Connection con = DBConnection.getCon();) {
-                statement = con.prepareStatement("insert into " + NewsDBConstants.TABLE_NEWS + " (title, content, url) values (?, ?, ?)");
-                statement.setString(1, title);
-                statement.setString(2, content);
-                statement.setString(3, link);
-                statement.executeUpdate();
-            } catch (SQLException throwables) {
-                throwables.printStackTrace();
-            } finally {
-                closePreparedStatement(statement);
+            for (Element articleTag : articleTags) {
+                String title = articleTags.get(0).child(0).text();
+                String content = articleTag.select("p").stream().map(Element::text).collect(Collectors.joining("\n"));
+                System.out.println(title);
+                PreparedStatement statement = null;
+                try (Connection con = DBConnection.getCon();) {
+                    statement = con.prepareStatement("insert into " + NewsDBConstants.TABLE_NEWS + " (title, content, url) values (?, ?, ?)");
+                    statement.setString(1, title);
+                    statement.setString(2, content);
+                    statement.setString(3, link);
+                    statement.executeUpdate();
+                } catch (SQLException throwables) {
+                    throwables.printStackTrace();
+                } finally {
+                    closePreparedStatement(statement);
+                }
             }
         }
     }
