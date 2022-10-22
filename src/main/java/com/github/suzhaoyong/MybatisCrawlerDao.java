@@ -24,7 +24,7 @@ public class MybatisCrawlerDao implements CrawlerDao {
     }
 
     @Override
-    public String getNextLinkThenRemove() throws SQLException {
+    public synchronized String getNextLinkThenRemove() throws SQLException {
         try (SqlSession session = sqlSessionFactory.openSession(true)) {
             String link = session.selectOne("com.github.suzhaoyong.Crawler.selectNextAvailableLink");
             if (link != null) {

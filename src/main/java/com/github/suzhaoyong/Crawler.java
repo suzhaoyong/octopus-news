@@ -16,27 +16,32 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
-public class Crawler {
+public class Crawler extends Thread {
     static final String INDEX_PAGE_URL = "https://sina.cn";
-    private CrawlerDao dao = new MybatisCrawlerDao();
+    private CrawlerDao dao;
 
-    public static void main(String[] args) throws SQLException {
-        new Crawler().run();
+    public Crawler(CrawlerDao dao) {
+        this.dao = dao;
     }
 
-    public void run() throws SQLException {
+    @Override
+    public void run() {
         String link;
-        while ((link = dao.getNextLinkThenRemove()) != null) {
-            if (dao.isAlreadyProcessedLink(link)) {
-                continue;
+        try {
+            while ((link = dao.getNextLinkThenRemove()) != null) {
+                if (dao.isAlreadyProcessedLink(link)) {
+                    continue;
+                }
+                if (isInterestLink(link)) {
+                    System.out.println(link);
+                    Document doc = httpGetAndParseHtml(link);
+                    parseHtmlThenStoreLinkIntoToBeProcessedDataBase(doc);
+                    storeIntoDataBaseIfItIsNewsPage(doc, link);
+                    dao.storeLinkIntoAlreadyProcessedDataBase(link);
+                }
             }
-            if (isInterestLink(link)) {
-                System.out.println(link);
-                Document doc = httpGetAndParseHtml(link);
-                parseHtmlThenStoreLinkIntoToBeProcessedDataBase(doc);
-                storeIntoDataBaseIfItIsNewsPage(doc, link);
-                dao.storeLinkIntoAlreadyProcessedDataBase(link);
-            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
