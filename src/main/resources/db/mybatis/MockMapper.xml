@@ -9,7 +9,7 @@
     </insert>
 
     <select id="selectNews" resultType="com.github.suzhaoyong.News">
-        select * from news
+        select * from news limit 20
     </select>
 
 </mapper>
