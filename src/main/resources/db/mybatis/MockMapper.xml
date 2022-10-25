@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.suzhaoyong.MockData">
+    <insert id="insertNews" parameterType="com.github.suzhaoyong.News">
+        insert into news (title, content, url, created_at, modified_at)
+        values(#{title}, #{content}, #{url}, #{createdAt}, #{modifiedAt})
+    </insert>
+
+    <select id="selectNews" resultType="com.github.suzhaoyong.News">
+        select * from news limit 20
+    </select>
+
+</mapper>
